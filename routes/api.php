@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\VersionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/products/type/{type_id}', [ProductController::class, 'getByType']);
@@ -10,6 +11,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/products', [ProductController::class, 'store'])->middleware('admin'); // Admin-only route
 
+Route::middleware('auth:sanctum')->get('/check-version', [VersionController::class, 'checkVersion']);
 
 
 // ==============
