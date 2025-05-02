@@ -17,14 +17,13 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'price' => $this->price,
             'description' => $this->description,
-            'price' => (float) $this->price,
-            'stars' => (int) $this->stars,
-            'img' => $this->img,
-            'location' => $this->location,
-            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
-            'type_id' => (int) $this->type_id,
+            'category_id' => $this->category_id,
+            'category_image' => $this->category->image ?? null,
+            'images' => $this->images->pluck('image_path')->map(function ($path) {
+                return asset('storage/' . $path);
+            }),
         ];
     }
 }
