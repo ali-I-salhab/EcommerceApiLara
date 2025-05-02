@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -39,6 +40,7 @@ public function update(Request $request, $id)
         'price' => 'sometimes|required|numeric',
         'stars' => 'sometimes|required|integer|min:1|max:5',
         'location' => 'sometimes|required|string',
+        
         'type_id' => 'sometimes|required|integer|exists:types,id',
         'category_id' => 'sometimes|required|integer|exists:categories,id', // Validate category_id
     ]);
@@ -52,26 +54,33 @@ public function update(Request $request, $id)
 public function store(Request $request)
 {
     $request->validate([
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
+        'name' => 'required|string',
         'price' => 'required|numeric',
-        'stars' => 'required|integer|min:1|max:5',
-        'location' => 'required|string',
-        'type_id' => 'required|integer|exists:types,id',
-        'category_id' => 'required|integer|exists:categories,id', // Validate category_id
+        'description' => 'required|string',
+        'category_id' => 'required|exists:categories,id',
+        'images.*' => 'image|mimes:jpg,jpeg,png|max:2048' // multiple images
     ]);
 
-    $product = Product::create([
-        'name' => $request->name,
-        'description' => $request->description,
-        'price' => $request->price,
-        'stars' => $request->stars,
-        'location' => $request->location,
-        'type_id' => $request->type_id,
-        'category_id' => $request->category_id, // Assign category_id
-    ]);
+    $product = Product::create($request->only('name', 'price', 'description', 'category_id'));
 
-    return response()->json($product, 201);
+    // Save each uploaded image
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('product_images', 'public');
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => $path,
+            ]);
+        }
+    }
+
+    $product->load('images');
+
+    return response()->json([
+        'message' => 'Product created',
+        'product' => $product,
+        'images' => $product->images->pluck('image_path'),
+    ]);
 }
 
 public function show($id)
